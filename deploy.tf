@@ -18,6 +18,17 @@ provider "openstack" {
   region              = "RegionOne"
 }
 
+resource "openstack_networking_port_v2" "port" {
+  name           = "port"
+  admin_state_up = "true"
+
+  network_id = var.network_id
+
+  security_group_ids = [
+    var.security_group_id
+  ]
+}
+
 # Create a web server
 resource "openstack_compute_instance_v2" "nimbus_instance" {
   name              = var.instance_name
@@ -29,3 +40,9 @@ resource "openstack_compute_instance_v2" "nimbus_instance" {
     name = var.network
   }
 }
+
+# # Docker
+# provider "docker" {
+#   host     = "ssh://ubuntu@remote-host:22"
+#   ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+# }
