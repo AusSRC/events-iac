@@ -6,6 +6,10 @@ required_version = ">= 0.14.0"
       source  = "terraform-provider-openstack/openstack"
       version = "~> 1.48.0"
     }
+    docker = {
+      source = "kreuzwerker/docker"
+      version = "3.0.1"
+    }
   }
 }
 
@@ -16,17 +20,6 @@ provider "openstack" {
   project_domain_id   = "5f2963bd4adf46b18f7d4301dbe44ad8"
   auth_url            = "https://nimbus.pawsey.org.au:5000"
   region              = "RegionOne"
-}
-
-resource "openstack_networking_port_v2" "port" {
-  name           = "port"
-  admin_state_up = "true"
-
-  network_id = var.network_id
-
-  security_group_ids = [
-    var.security_group_id
-  ]
 }
 
 # Create a web server
@@ -41,8 +34,26 @@ resource "openstack_compute_instance_v2" "nimbus_instance" {
   }
 }
 
-# # Docker
-# provider "docker" {
-#   host     = "ssh://ubuntu@remote-host:22"
-#   ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
-# }
+output "docker_host" {
+  value = "ssh://ubuntu@${openstack_compute_instance_v2.nimbus_instance.access_ip_v4}:22"
+  depends_on = [
+    openstack_compute_instance_v2.nimbus_instance,
+  ]
+}
+
+# Docker
+provider "docker" {
+  host     = "ssh://ubuntu@${openstack_compute_instance_v2.nimbus_instance.access_ip_v4}:22"
+  ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+}
+
+# Pulls the image
+resource "docker_image" "hello_world" {
+  name = "hello-world:latest"
+}
+
+# Create a container
+resource "docker_container" "hello_world" {
+  image = docker_image.hello_world.image_id
+  name  = "hello_world"
+}
