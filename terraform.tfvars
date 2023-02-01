@@ -8,3 +8,7 @@ network         = "aus-src-network"
 instance_count  = 1
 root_vol_size   = 10
 image_id        = "9c37814e-1e77-4b47-a14e-4368420408de"
+
+# Docker
+ssh_key = "/Users/she393/.ssh/nimbus-vm.pem"
+docker_image = "ubuntu:latest"

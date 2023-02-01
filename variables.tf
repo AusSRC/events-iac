@@ -8,3 +8,7 @@ variable "network" {}
 variable "instance_count" {}
 variable "root_vol_size" {}
 variable "image_id" {}
+
+# Docker
+variable "ssh_key" {}
+variable "docker_image" {}

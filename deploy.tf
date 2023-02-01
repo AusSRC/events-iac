@@ -30,8 +30,18 @@ resource "openstack_compute_instance_v2" "nimbus_instance" {
   key_pair          = var.ssh_key_pair
   security_groups   = ["default", var.security_group]
   network {
+    name = "Public external"
+  }
+  network {
     name = var.network
   }
+}
+
+output "ip_address" {
+  value = openstack_compute_instance_v2.nimbus_instance.access_ip_v4
+  depends_on = [
+    openstack_compute_instance_v2.nimbus_instance,
+  ]
 }
 
 output "docker_host" {
@@ -41,19 +51,20 @@ output "docker_host" {
   ]
 }
 
-# Docker
+# sDocker
 provider "docker" {
   host     = "ssh://ubuntu@${openstack_compute_instance_v2.nimbus_instance.access_ip_v4}:22"
-  ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+  ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-i", var.ssh_key]
 }
 
 # Pulls the image
-resource "docker_image" "hello_world" {
-  name = "hello-world:latest"
+resource "docker_image" "ubuntu" {
+  name = var.docker_image
 }
 
 # Create a container
-resource "docker_container" "hello_world" {
-  image = docker_image.hello_world.image_id
-  name  = "hello_world"
+resource "docker_container" "ubuntu" {
+  image = docker_image.ubuntu.image_id
+  name  = "ubuntu"
+  tty   = true
 }
